@@ -1,0 +1,280 @@
+---
+title: "Problem Set 2"
+subtitle: "EC 422: Economic Forecasting | Fall 2026"
+author: "Aidan Dugan"
+date: today
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+**GitHub repo:** <https://github.com/adugan10/ec422_ps2_dugan>
+
+
+
+## Data
+
+The data are seasonally adjusted monthly unemployment rates for the United
+States, Oregon, California, Texas, and New York. They come from the Federal
+Reserve Economic Data (FRED) database and are identified by the series codes
+UNRATE, ORUR, CAUR, TXUR, and NYUR. The series were requested starting in
+January 1976. Because `tq_get()` may fail when accessing FRED, I use the
+`unemp_raw.rds` dataset provided by Professor Piger and stored in the project's
+`data` folder, following his October 16 instructions.
+
+```{r}
+#| label: load-packages
+#| include: false
+library(tidyverse)
+library(knitr)
+```
+
+```{r}
+#| label: read-data
+#| echo: true
+# Use the data file Professor Piger provided as an email attachment.
+# It must be saved inside this project as data/unemp_raw.rds.
+unemp_raw <- read_rds("data/unemp_raw.rds")
+head(unemp_raw)
+```
+
+The saved observations cover `r format(min(unemp_raw$date), "%B %Y")` through
+`r format(max(unemp_raw$date), "%B %Y")`. Each row represents a region in one
+month. The `price` field in the original data contains the unemployment rate.
+
+## Wrangling
+
+First, I renamed the rate variable and mapped each FRED series code to a
+readable region name. I then filled October 2025 with September 2025's value
+within each region, as instructed, before computing monthly changes in
+percentage points. I also created a restricted sample from January 2015
+onward and separate summaries that exclude observations from 2020.
+
+```{r}
+#| label: wrangle-data
+#| echo: true
+unemp <- unemp_raw |>
+  rename(unemployment_rate = price) |>
+  mutate(
+    region = case_when(
+      symbol == "UNRATE" ~ "United States",
+      symbol == "ORUR"   ~ "Oregon",
+      symbol == "CAUR"   ~ "California",
+      symbol == "TXUR"   ~ "Texas",
+      symbol == "NYUR"   ~ "New York"
+    )
+  )
+
+# Represent any skipped month explicitly before filling October 2025.
+unemp <- unemp |>
+  group_by(region, symbol) |>
+  complete(date = seq.Date(min(date), max(date), by = "month")) |>
+  ungroup()
+
+unemp <- unemp |>
+  arrange(region, date) |>
+  group_by(region) |>
+  mutate(
+    unemployment_rate = replace(
+      unemployment_rate,
+      date == as.Date("2025-10-01"),
+      unemployment_rate[date == as.Date("2025-09-01")]
+    )
+  ) |>
+  ungroup()
+
+unemp <- unemp |>
+  arrange(region, date) |>
+  group_by(region) |>
+  mutate(
+    unemployment_rate_change = unemployment_rate - lag(unemployment_rate)
+  ) |>
+  ungroup()
+
+unemp_recent <- unemp |>
+  filter(date >= as.Date("2015-01-01"))
+
+unemp_summary <- unemp |>
+  group_by(region) |>
+  summarize(
+    mean_rate = mean(unemployment_rate, na.rm = TRUE),
+    min_rate = min(unemployment_rate, na.rm = TRUE),
+    max_rate = max(unemployment_rate, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+unemp_recent_summary <- unemp_recent |>
+  group_by(region) |>
+  summarize(
+    mean_rate = mean(unemployment_rate, na.rm = TRUE),
+    min_rate = min(unemployment_rate, na.rm = TRUE),
+    max_rate = max(unemployment_rate, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+unemp_top_increases <- unemp |>
+  filter(!is.na(unemployment_rate_change)) |>
+  slice_max(unemployment_rate_change, n = 5, with_ties = TRUE)
+
+unemp_top_decreases <- unemp |>
+  filter(!is.na(unemployment_rate_change)) |>
+  slice_min(unemployment_rate_change, n = 5, with_ties = TRUE)
+
+unemp_no_covid <- unemp |>
+  filter(format(date, "%Y") != "2020")
+
+unemp_top_increases_no_covid <- unemp_no_covid |>
+  filter(!is.na(unemployment_rate_change)) |>
+  slice_max(unemployment_rate_change, n = 5, with_ties = TRUE) |>
+  select(region, date, unemployment_rate_change, unemployment_rate)
+
+unemp_top_decreases_no_covid <- unemp_no_covid |>
+  filter(!is.na(unemployment_rate_change)) |>
+  slice_min(unemployment_rate_change, n = 5, with_ties = TRUE) |>
+  select(region, date, unemployment_rate_change, unemployment_rate)
+```
+
+### Table 1. Full-sample unemployment rate summary
+
+This table shows the mean, minimum, and maximum unemployment rates for each
+region across all available months in the saved data.
+
+```{r}
+#| echo: false
+kable(unemp_summary, digits = 2,
+      caption = "Full-sample unemployment rates (percent)")
+```
+
+### Table 2. Unemployment rate summary since January 2015
+
+This table uses only months from January 2015 onward.
+
+```{r}
+#| echo: false
+kable(unemp_recent_summary, digits = 2,
+      caption = "Unemployment rates since January 2015 (percent)")
+```
+
+### Table 3. Largest monthly increases excluding 2020
+
+This table lists the five largest month-over-month unemployment rate increases
+outside 2020, including any tied values. Changes are measured in percentage
+points.
+
+```{r}
+#| echo: false
+kable(unemp_top_increases_no_covid, digits = 2,
+      caption = "Largest monthly increases, excluding 2020")
+```
+
+### Table 4. Largest monthly decreases excluding 2020
+
+This table lists the five largest decreases outside 2020, including any ties.
+
+```{r}
+#| echo: false
+kable(unemp_top_decreases_no_covid, digits = 2,
+      caption = "Largest monthly decreases, excluding 2020")
+```
+
+## Visualization
+
+### Figure 1. Unemployment rates over time
+
+The first chart puts the United States and four states on the same axes so their
+unemployment-rate levels and common turning points can be compared.
+
+```{r}
+#| echo: false
+#| fig-width: 10
+#| fig-height: 5
+plot_5_1 <- ggplot(unemp, aes(x = date, y = unemployment_rate,
+                             color = region)) +
+  geom_line(linewidth = 0.55, na.rm = TRUE) +
+  labs(
+    title = "Monthly unemployment rates: U.S. and four states",
+    x = "Date",
+    y = "Unemployment rate (%)",
+    color = "Region"
+  ) +
+  theme_minimal()
+plot_5_1
+```
+
+### Figure 2. Unemployment rates in individual panels
+
+Faceting the same monthly series makes it easier to trace each region's pattern
+without overlapping lines.
+
+```{r}
+#| echo: false
+#| fig-width: 10
+#| fig-height: 7
+plot_5_2 <- ggplot(unemp, aes(x = date, y = unemployment_rate)) +
+  geom_line(color = "steelblue4", linewidth = 0.55, na.rm = TRUE) +
+  facet_wrap(~ region) +
+  labs(
+    title = "Monthly unemployment rates by region",
+    x = "Date",
+    y = "Unemployment rate (%)"
+  ) +
+  theme_minimal()
+plot_5_2
+```
+
+### Figure 3. Mean unemployment rates by region
+
+The bars are ordered from the lowest to the highest full-sample average.
+
+```{r}
+#| echo: false
+#| fig-width: 9
+#| fig-height: 5
+plot_5_3 <- ggplot(
+  unemp_summary,
+  aes(x = fct_reorder(region, mean_rate), y = mean_rate)
+) +
+  geom_col(fill = "steelblue4") +
+  labs(
+    title = "Average unemployment rate by region, full sample",
+    x = "Region (lowest to highest average)",
+    y = "Mean unemployment rate (%)"
+  ) +
+  theme_minimal()
+plot_5_3
+```
+
+### Figure 4. Size of monthly changes by region
+
+For my additional plot, I compare the *absolute* month-to-month change in the
+unemployment rate across regions using boxplots. I chose this because the line
+plots show rate levels, while a distribution of monthly changes makes it easier
+to compare how much the unemployment rate typically moves from month to month.
+
+```{r}
+#| echo: false
+#| fig-width: 10
+#| fig-height: 5
+plot_5_4 <- ggplot(
+  unemp |> filter(!is.na(unemployment_rate_change)),
+  aes(x = region, y = abs(unemployment_rate_change))
+) +
+  geom_boxplot(fill = "skyblue3", outlier.alpha = 0.45) +
+  labs(
+    title = "Magnitude of monthly unemployment changes by region",
+    x = "Region",
+    y = "Absolute month-over-month change (percentage points)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+plot_5_4
+```
+
+## Reflection
+
+This assignment helped me get more comfortable using R to work with data. Using the provided data file  made it easier to focus on organizing the data and creating the tables and graphs. One thing I had to pay more attention to was making sure the dates were in the right order when calculating monthly changes. I also thought it was interesting to see how excluding 2020 affected the results. Overall, I have a better understanding of how RStudio, Quarto, and GitHub work together.
+
