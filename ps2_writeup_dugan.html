@@ -2268,7 +2268,7 @@ vertical-align: -.125em;
 <p><strong>GitHub repo:</strong> <a href="https://github.com/adugan10/ec422_ps2_dugan" class="uri">https://github.com/adugan10/ec422_ps2_dugan</a></p>
 <section id="data" class="level2">
 <h2 class="anchored" data-anchor-id="data">Data</h2>
-<p>The data are seasonally adjusted monthly unemployment rates for the United States, Oregon, California, Texas, and New York. They come from the Federal Reserve Economic Data (FRED) database and are identified by the series codes UNRATE, ORUR, CAUR, TXUR, and NYUR. The series were requested starting in January 1976. Because <code>tq_get()</code> may fail when accessing FRED, I use the <code>unemp_raw.rds</code> dataset provided by Professor Piger and stored in the project’s <code>data</code> folder, following his October 16 instructions.</p>
+<p>The data include seasonally adjusted monthly unemployment rates for the United States. They also cover Oregon, California, Texas, and New York. The data come from the Federal Reserve Economic Data (FRED) database. Each region’s data is identified by the following series codes: UNRATE for the United States, ORUR for Oregon, CAUR for California, TXUR for Texas, and NYUR for New York. The data series begin in January 1976. Since <code>tq_get()</code> wasn’t working for this assignment, I used the <code>unemp_raw.rds</code> dataset that Professor Piger provided, which is stored in the project’s <code>data</code> folder.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>unemp_raw <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">&quot;data/unemp_raw.rds&quot;</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(unemp_raw)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -2288,7 +2288,7 @@ vertical-align: -.125em;
 </section>
 <section id="wrangling" class="level2">
 <h2 class="anchored" data-anchor-id="wrangling">Wrangling</h2>
-<p>First, I renamed the rate variable and mapped each FRED series code to a readable region name. I then filled October 2025 with September 2025’s value within each region, as instructed, before computing monthly changes in percentage points. I also created a sample starting in January 2015 and identified the largest monthly increases and decreases after excluding 2020.</p>
+<p>To make the data easier to work with, I started by changing the variable names to be more understandable. I also replaced the FRED codes with the names of the states and the United States. For October 2025, I used the unemployment rate from September 2025, as the instructions said. Next, I calculated the month-to-month changes in unemployment for each region. I made a separate dataset starting from January 2015 and found the average, minimum, and maximum unemployment rates. Finally, I checked which months had the biggest increases and decreases, both with and without 2020, to see how much the pandemic changed the results.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>unemp <span class="ot">&lt;-</span> unemp_raw <span class="sc">|&gt;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">unemployment_rate =</span> price) <span class="sc">|&gt;</span></span>
@@ -2621,7 +2621,7 @@ vertical-align: -.125em;
 <h2 class="anchored" data-anchor-id="visualization">Visualization</h2>
 <section id="figure-1.-unemployment-rates-over-time" class="level3">
 <h3 class="anchored" data-anchor-id="figure-1.-unemployment-rates-over-time">Figure 1. Unemployment rates over time</h3>
-<p>The first chart puts the United States and four states on the same axes so their unemployment-rate levels and common turning points can be compared.</p>
+<p>This graph shows the unemployment rates for all five regions at once. I see that the rates usually rise and fall together, but some states have higher unemployment than others. The most noticeable change is in 2020, when unemployment went up quickly in every region.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -2634,7 +2634,7 @@ vertical-align: -.125em;
 </section>
 <section id="figure-2.-unemployment-rates-in-individual-panels" class="level3">
 <h3 class="anchored" data-anchor-id="figure-2.-unemployment-rates-in-individual-panels">Figure 2. Unemployment rates in individual panels</h3>
-<p>Faceting the same monthly series makes it easier to trace each region’s pattern without overlapping lines.</p>
+<p>For this graph I’ve split each region out so it’s easier to see the trends in unemployment in each region without the lines all overlapping. California had fairly high unemployment around 2010 and then all five regions saw a very sharp spike in 2020. Having the graphs split up makes the differences much easier to compare.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -2647,7 +2647,7 @@ vertical-align: -.125em;
 </section>
 <section id="figure-3.-mean-unemployment-rates-by-region" class="level3">
 <h3 class="anchored" data-anchor-id="figure-3.-mean-unemployment-rates-by-region">Figure 3. Mean unemployment rates by region</h3>
-<p>The bars are ordered from the lowest to the highest full-sample average.</p>
+<p>This bar chart compares the average unemployment rates for all five regions during the entire period. California had the highest average at 7.08%, and Texas had the lowest at 5.85%. I ordered the bars from lowest to highest to make the differences easier to see.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -2660,7 +2660,7 @@ vertical-align: -.125em;
 </section>
 <section id="figure-4.-size-of-monthly-changes-by-region" class="level3">
 <h3 class="anchored" data-anchor-id="figure-4.-size-of-monthly-changes-by-region">Figure 4. Size of monthly changes by region</h3>
-<p>For my additional plot, I compare the <em>absolute</em> month-to-month change in the unemployment rate across regions using boxplots. I chose this because the line plots show rate levels, while a distribution of monthly changes makes it easier to compare how much the unemployment rate typically moves from month to month.</p>
+<p>For my last graph, I used boxplots to look at month-to-month changes in unemployment in each region. I’ve used the absolute change (so it doesn’t matter whether unemployment goes up or down, it just measures the size of the change). Most months had fairly small changes but there were some months with much larger changes. I chose this graph because it makes it easier to compare how much unemployment changes from month to month across the different regions.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>

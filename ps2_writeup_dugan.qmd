@@ -18,13 +18,8 @@ execute:
 
 ## Data
 
-The data are seasonally adjusted monthly unemployment rates for the United
-States, Oregon, California, Texas, and New York. They come from the Federal
-Reserve Economic Data (FRED) database and are identified by the series codes
-UNRATE, ORUR, CAUR, TXUR, and NYUR. The series were requested starting in
-January 1976. Because `tq_get()` may fail when accessing FRED, I use the
-`unemp_raw.rds` dataset provided by Professor Piger and stored in the project's
-`data` folder, following his October 16 instructions.
+The data include seasonally adjusted monthly unemployment rates for the United States. They also cover Oregon, California, Texas, and New York. The data come from the Federal Reserve Economic Data (FRED) database.
+Each region’s data is identified by the following series codes: UNRATE for the United States, ORUR for Oregon, CAUR for California, TXUR for Texas, and NYUR for New York. The data series begin in January 1976. Since `tq_get()` wasn't working for this assignment, I used the `unemp_raw.rds` dataset that Professor Piger provided, which is stored in the project's `data` folder.
 
 ```{r}
 #| label: load-packages
@@ -47,10 +42,9 @@ month. The `price` field in the original data contains the unemployment rate.
 
 ## Wrangling
 
-First, I renamed the rate variable and mapped each FRED series code to a
-readable region name. I then filled October 2025 with September 2025's value
-within each region, as instructed, before computing monthly changes in
-percentage points. I also created a sample starting in January 2015 and identified the largest monthly increases and decreases after excluding 2020.
+To make the data easier to work with, I started by changing the variable names to be more understandable. I also replaced the FRED codes with the names of the states and the United States. For October 2025, I used the unemployment rate from September 2025, as the instructions said. Next, I calculated the month-to-month changes in unemployment for each region. I made a separate dataset starting from January 2015 and found the average, minimum, and maximum unemployment rates. Finally, I checked which months had the biggest increases and decreases, both with and without 2020, to see how much the pandemic changed the results.
+
+
 
 ```{r}
 #| label: wrangle-data
@@ -183,8 +177,7 @@ kable(unemp_top_decreases_no_covid, digits = 2,
 
 ### Figure 1. Unemployment rates over time
 
-The first chart puts the United States and four states on the same axes so their
-unemployment-rate levels and common turning points can be compared.
+This graph shows the unemployment rates for all five regions at once. I see that the rates usually rise and fall together, but some states have higher unemployment than others. The most noticeable change is in 2020, when unemployment went up quickly in every region.
 
 ```{r}
 #| echo: false
@@ -205,8 +198,7 @@ plot_5_1
 
 ### Figure 2. Unemployment rates in individual panels
 
-Faceting the same monthly series makes it easier to trace each region's pattern
-without overlapping lines.
+For this graph I've split each region out so it's easier to see the trends in unemployment in each region without the lines all overlapping. California had fairly high unemployment around 2010 and then all five regions saw a very sharp spike in 2020. Having the graphs split up makes the differences much easier to compare.
 
 ```{r}
 #| echo: false
@@ -226,7 +218,7 @@ plot_5_2
 
 ### Figure 3. Mean unemployment rates by region
 
-The bars are ordered from the lowest to the highest full-sample average.
+This bar chart compares the average unemployment rates for all five regions during the entire period. California had the highest average at 7.08%, and Texas had the lowest at 5.85%. I ordered the bars from lowest to highest to make the differences easier to see.
 
 ```{r}
 #| echo: false
@@ -248,10 +240,7 @@ plot_5_3
 
 ### Figure 4. Size of monthly changes by region
 
-For my additional plot, I compare the *absolute* month-to-month change in the
-unemployment rate across regions using boxplots. I chose this because the line
-plots show rate levels, while a distribution of monthly changes makes it easier
-to compare how much the unemployment rate typically moves from month to month.
+For my last graph, I used boxplots to look at month-to-month changes in unemployment in each region. I've used the absolute change (so it doesn't matter whether unemployment goes up or down, it just measures the size of the change). Most months had fairly small changes but there were some months with much larger changes. I chose this graph because it makes it easier to compare how much unemployment changes from month to month across the different regions.
 
 ```{r}
 #| echo: false
