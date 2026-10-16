@@ -36,8 +36,7 @@ library(knitr)
 ```{r}
 #| label: read-data
 #| echo: true
-# Use the data file Professor Piger provided as an email attachment.
-# It must be saved inside this project as data/unemp_raw.rds.
+
 unemp_raw <- read_rds("data/unemp_raw.rds")
 head(unemp_raw)
 ```

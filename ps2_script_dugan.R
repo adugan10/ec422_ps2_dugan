@@ -1,14 +1,12 @@
 # EC 422 - Problem Set 2
 # Aidan Dugan
 # Parts 3-5: data, wrangling, and visualizations
-# Run from the ec422_ps2_dugan RStudio Project.
+
 
 library(tidyverse)
 
 # PART 3: READ IN DATA ---------------------------------------------------------
-# Professor Piger's Oct. 16 email replaces tq_get() with a provided RDS file.
-# Save the email attachment as data/unemp_raw.rds inside this RStudio project.
-# Do not rename the file or try to download it using tq_get().
+
 unemp_raw <- read_rds("data/unemp_raw.rds")
 head(unemp_raw)
 
