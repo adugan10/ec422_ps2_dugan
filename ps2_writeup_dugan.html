@@ -2290,7 +2290,7 @@ vertical-align: -.125em;
 </section>
 <section id="wrangling" class="level2">
 <h2 class="anchored" data-anchor-id="wrangling">Wrangling</h2>
-<p>First, I renamed the rate variable and mapped each FRED series code to a readable region name. I then filled October 2025 with September 2025’s value within each region, as instructed, before computing monthly changes in percentage points. I also created a restricted sample from January 2015 onward and separate summaries that exclude observations from 2020.</p>
+<p>First, I renamed the rate variable and mapped each FRED series code to a readable region name. I then filled October 2025 with September 2025’s value within each region, as instructed, before computing monthly changes in percentage points. I also created a sample starting in January 2015 and identified the largest monthly increases and decreases after excluding 2020.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>unemp <span class="ot">&lt;-</span> unemp_raw <span class="sc">|&gt;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">unemployment_rate =</span> price) <span class="sc">|&gt;</span></span>
